@@ -59,9 +59,17 @@ class BaseTool(metaclass=ABCMeta):
                     ' backend. Then specify `backend=onnxruntime`.')  # noqa
 
         elif backend == 'onnxruntime':
-            import onnxruntime as ort
-            providers = RTMLIB_SETTINGS[backend][device]
-
+            import onnxruntime as ort   
+            if 'cuda' in device:
+                splitResult = device.split(':')
+                if len(splitResult)==2:
+                    _,gpuId = splitResult
+                    gpuId = int(gpuId)
+                    providers = ('CUDAExecutionProvider', {'device_id': gpuId})
+                else:
+                    providers = RTMLIB_SETTINGS[backend][device]
+            else:
+                providers = RTMLIB_SETTINGS[backend][device]
             self.session = ort.InferenceSession(path_or_bytes=onnx_model,
                                                 providers=[providers])
 
